@@ -12,7 +12,7 @@ class MemPageCache : public AbstractPageCache {
 public:
     MemPageCache(size_t page_size) : page_size(page_size) { next_id.store(1); }
 
-    virtual Page* new_page(boost::upgrade_lock<Page>& lock)
+    virtual Page* new_page(boost::upgrade_lock<Page>& lock) override
     {
         auto id = get_next_id();
         std::unique_lock<std::shared_mutex> guard(mutex);
@@ -22,7 +22,7 @@ public:
         return page;
     }
 
-    virtual Page* fetch_page(PageID id, boost::upgrade_lock<Page>& lock)
+    virtual Page* fetch_page(PageID id, boost::upgrade_lock<Page>& lock) override
     {
         std::shared_lock<std::shared_mutex> guard(mutex);
         auto it = page_map.find(id);
@@ -31,14 +31,33 @@ public:
         return it->second.get();
     }
 
-    virtual void pin_page(Page* page, boost::upgrade_lock<Page>&) {}
-    virtual void unpin_page(Page* page, bool dirty, boost::upgrade_lock<Page>&) {}
+    virtual void pin_page(Page* page, boost::upgrade_lock<Page>&) override {}
+    virtual void unpin_page(Page* page, bool dirty, boost::upgrade_lock<Page>&) override {}
 
-    virtual void flush_page(Page* page, boost::upgrade_lock<Page>&) {}
-    virtual void flush_all_pages() {}
+    virtual void flush_page(Page* page, boost::upgrade_lock<Page>&) override {}
+    virtual void flush_all_pages() override {}
 
-    virtual size_t size() const { return page_map.size(); }
-    virtual size_t get_page_size() const { return page_size; }
+    virtual size_t size() const override { return page_map.size(); }
+    virtual size_t get_page_size() const override { return page_size; }
+
+    virtual void prefetch_page(PageID id) override {
+        std::shared_lock<std::shared_mutex> guard(mutex);
+        if (page_map.find(id) == page_map.end())
+        {
+            std::unique_lock<std::shared_mutex> write_guard(mutex);
+            if (page_map.find(id) == page_map.end())
+            {
+                page_map[id] = std::make_unique<Page>(id, page_size);
+            }
+        }
+    }
+
+    virtual void prefetch_pages(const std::vector<PageID> &ids) override {
+        for (PageID id : ids)
+        {
+            prefetch_page(id);
+        }
+    }
 
 private:
     size_t page_size;

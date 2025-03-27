@@ -17,7 +17,10 @@ using ValueType = uint64_t;
 
 TEST(TreeTest, HandleInsert)
 {
-    char* tmp = tmpnam(NULL);
+    char tmp_template[] = "/tmp/bptree_XXXXXX";
+    int fd = mkstemp(tmp_template);
+    close(fd);
+    std::string tmp(tmp_template);
     srand(time(0));
 
     bptree::MemPageCache page_cache(1024);

@@ -59,7 +59,8 @@ enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 set(TEST_SOURCE_FILES
-    ${TOPDIR}/tests/tree_test.cpp)
+    ${TOPDIR}/tests/tree_test.cpp
+    ${TOPDIR}/tests/mira_performance_test.cpp)
     
 add_executable(bptree_unit_tests ${EXT_SOURCE_FILES} ${TEST_SOURCE_FILES})
 target_link_libraries(bptree_unit_tests bptree gtest gtest_main ${LIBRARIES})

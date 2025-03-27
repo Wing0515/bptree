@@ -52,8 +52,56 @@ public:
         return node;
     }
 
+    // Helper method to prefetch nodes along a search path
+    void prefetch_search_path(const K& key) {
+        auto* node = root.get();
+        std::vector<PageID> pages_to_prefetch;
+        
+        while (node && !node->is_leaf()) {
+            auto* inner_node = static_cast<InnerNode<N, K, V, KeySerializer, KeyComparator, KeyEq, ValueSerializer>*>(node);
+            
+            // Find the child index for this key
+            int child_idx = std::distance(
+                inner_node->keys.begin(),
+                std::upper_bound(inner_node->keys.begin(), 
+                                inner_node->keys.begin() + inner_node->get_size(),
+                                key, 
+                                inner_node->kcmp)
+            );
+            
+            // Prefetch this child
+            if (inner_node->child_pages[child_idx] != Page::INVALID_PAGE_ID) {
+                pages_to_prefetch.push_back(inner_node->child_pages[child_idx]);
+            }
+            
+            // Also prefetch siblings if available - this helps with range scans
+            if (child_idx > 0 && inner_node->child_pages[child_idx-1] != Page::INVALID_PAGE_ID) {
+                pages_to_prefetch.push_back(inner_node->child_pages[child_idx-1]);
+            }
+            
+            if (child_idx < inner_node->get_size() && 
+                inner_node->child_pages[child_idx+1] != Page::INVALID_PAGE_ID) {
+                pages_to_prefetch.push_back(inner_node->child_pages[child_idx+1]);
+            }
+            
+            // Move to the next node in the path
+            if (inner_node->child_cache[child_idx]) {
+                node = inner_node->child_cache[child_idx].get();
+            } else {
+                break; // We can't continue the path prediction
+            }
+        }
+        
+        // Request prefetch for all identified pages
+        if (!pages_to_prefetch.empty()) {
+            page_cache->prefetch_pages(pages_to_prefetch);
+        }
+    }
+
     void get_value(const K& key, std::vector<V>& value_list)
     {
+        prefetch_search_path(key);
+
         while (true) {
             try {
                 value_list.clear();
@@ -199,6 +247,7 @@ public:
         page_cache->unpin_page(page, true, lock);
     }
 
+
     /* iterator interface */
     class iterator {
         friend class BTree<N, K, V, KeySerializer, KeyComparator, KeyEq,
@@ -301,6 +350,27 @@ public:
             kvp = std::make_pair(key_buf[idx], value_buf[idx]);
         }
 
+        void prefetch_next_batch() {
+            if (!next_key) return;
+
+            K key = *next_key;
+            
+            // Prefetch nodes that might contain this key and subsequent keys
+            tree->prefetch_search_path(key);
+            
+            // If we know this key is in a leaf node, also try to prefetch subsequent leaf nodes
+            // This is a simplified approach - in a real implementation, you'd track leaf node pointers
+            if (!key_buf.empty() && !tree->root->is_leaf()) {
+                // Estimate a few keys ahead
+                K ahead_key = key;
+                // This is a simple heuristic - you might need to adjust for your key type
+                if constexpr (std::is_integral_v<K>) {
+                    ahead_key += 100; // Look ~100 keys ahead
+                }
+                tree->prefetch_search_path(ahead_key);
+            }
+        }
+
         void get_next_batch()
         {
             if (!next_key) {
@@ -310,11 +380,17 @@ public:
 
             K key = *next_key;
             next_key = std::nullopt;
+            
+            // After getting data, prefetch the next batch
             tree->collect_values(key, &next_key, key_buf, value_buf);
             idx = std::lower_bound(key_buf.begin(), key_buf.end(), key, kcmp) -
-                  key_buf.begin();
+                key_buf.begin();
+            
             if (idx == key_buf.size()) {
                 ended = true;
+            } else if (next_key) {
+                // Prefetch the next batch in advance
+                prefetch_next_batch();
             }
         }
     };

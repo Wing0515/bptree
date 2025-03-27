@@ -19,17 +19,20 @@ public:
     HeapPageCache(std::string_view filename, bool create,
                   size_t max_pages = 4096, size_t page_size = 4096);
 
-    virtual Page* new_page(boost::upgrade_lock<Page>& lock);
-    virtual Page* fetch_page(PageID id, boost::upgrade_lock<Page>& lock);
+    virtual Page *new_page(boost::upgrade_lock<Page> &lock) override;
+    virtual Page *fetch_page(PageID id, boost::upgrade_lock<Page> &lock) override;
 
-    virtual void pin_page(Page* page, boost::upgrade_lock<Page>& lock);
-    virtual void unpin_page(Page* page, bool dirty, boost::upgrade_lock<Page>& lock);
+    virtual void pin_page(Page *page, boost::upgrade_lock<Page> &lock) override;
+    virtual void unpin_page(Page *page, bool dirty, boost::upgrade_lock<Page> &lock) override;
 
-    virtual void flush_page(Page* page, boost::upgrade_lock<Page>& lock);
-    virtual void flush_all_pages();
+    virtual void flush_page(Page *page, boost::upgrade_lock<Page> &lock) override;
+    virtual void flush_all_pages() override;
 
-    virtual size_t size() const { return pages.size(); }
-    virtual size_t get_page_size() const { return page_size; }
+    virtual size_t size() const override { return pages.size(); }
+    virtual size_t get_page_size() const override { return page_size; }
+
+    virtual void prefetch_page(PageID id) override;
+    virtual void prefetch_pages(const std::vector<PageID>& ids) override;
 
 private:
     std::unique_ptr<HeapFile> heap_file;

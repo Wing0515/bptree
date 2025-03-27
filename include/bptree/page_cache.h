@@ -18,6 +18,9 @@ public:
 
     virtual size_t size() const = 0;
     virtual size_t get_page_size() const = 0;
+
+    virtual void prefetch_page(PageID id) = 0;
+    virtual void prefetch_pages(const std::vector<PageID> &ids) = 0;
 };
 
 } // namespace bptree

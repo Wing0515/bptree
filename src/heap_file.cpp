@@ -1,4 +1,5 @@
 #include "bptree/heap_file.h"
+#include "bptree/latency_simulator.h"
 
 #include <cstdlib>
 #include <fcntl.h>
@@ -6,6 +7,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sstream>
+
+#ifdef __APPLE__
+    // macOS doesn't have off64_t and lseek64
+    #define off64_t off_t
+    #define lseek64 lseek
+#endif
 
 namespace bptree {
 
@@ -39,6 +46,9 @@ PageID HeapFile::new_page()
 
 void HeapFile::read_page(Page* page, boost::upgrade_to_unique_lock<Page>& lock)
 {
+    // Simulate network latency for far memory access
+    LatencySimulator::simulate_network_latency();
+
     std::lock_guard<std::mutex> guard(mutex);
 
     auto pid = page->get_id();
