@@ -7,6 +7,8 @@ namespace bptree {
 
 class AbstractPageCache {
 public:
+    virtual ~AbstractPageCache() = default; // Add virtual destructor
+    
     virtual Page* new_page(boost::upgrade_lock<Page>& lock) = 0;
     virtual Page* fetch_page(PageID id, boost::upgrade_lock<Page>& lock) = 0;
 

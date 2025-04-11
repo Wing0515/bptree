@@ -19,6 +19,9 @@ public:
 
     explicit Page(PageID id, size_t size) : id(id), size(size), dirty(false), pin_count(0)
     {
+        if (id == INVALID_PAGE_ID) {
+            throw std::invalid_argument("Cannot create page with INVALID_PAGE_ID (0)");
+        }
         buffer = std::make_unique<uint8_t[]>(size);
     }
 

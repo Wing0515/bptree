@@ -30,6 +30,7 @@ include_directories(
 set(SOURCE_FILES
     ${TOPDIR}/src/heap_file.cpp
     ${TOPDIR}/src/heap_page_cache.cpp
+    ${TOPDIR}/src/sectioned_page_cache.cpp
     ${TOPDIR}/src/tree.cpp
     ${TOPDIR}/src/tree_node.cpp)
             
@@ -39,6 +40,8 @@ set(HEADER_FILES
     ${TOPDIR}/include/bptree/mem_page_cache.h
     ${TOPDIR}/include/bptree/page.h
     ${TOPDIR}/include/bptree/page_cache.h
+    ${TOPDIR}/include/bptree/cache_profiler.h
+    ${TOPDIR}/include/bptree/sectioned_page_cache.h
     ${TOPDIR}/include/bptree/tree_node.h)
 
 set(EXT_SOURCE_FILES )
@@ -60,9 +63,31 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 set(TEST_SOURCE_FILES
     ${TOPDIR}/tests/tree_test.cpp
-    ${TOPDIR}/tests/mira_performance_test.cpp)
+    ${TOPDIR}/tests/mira_performance_test.cpp
+    ${TOPDIR}/tests/sectioned_cache_test.cpp) 
     
+# Main unit test executable that includes all tests
 add_executable(bptree_unit_tests ${EXT_SOURCE_FILES} ${TEST_SOURCE_FILES})
 target_link_libraries(bptree_unit_tests bptree gtest gtest_main ${LIBRARIES})
 add_test(bptree_tests bptree_unit_tests)
+
+# Standalone tree test
+add_executable(tree_test ${TOPDIR}/tests/tree_test.cpp)
+target_link_libraries(tree_test bptree gtest gtest_main ${LIBRARIES})
+add_test(tree_standalone_test tree_test)
+
+# Standalone mira performance test
+add_executable(mira_performance_test ${TOPDIR}/tests/mira_performance_test.cpp)
+target_link_libraries(mira_performance_test bptree gtest gtest_main ${LIBRARIES})
+add_test(mira_performance_standalone_test mira_performance_test)
+
+# Standalone sectioned cache test
+add_executable(sectioned_cache_test ${TOPDIR}/tests/sectioned_cache_test.cpp)
+target_link_libraries(sectioned_cache_test bptree gtest gtest_main ${LIBRARIES})
+add_test(sectioned_cache_standalone_test sectioned_cache_test)
+
+# Standalone cache structure test
+add_executable(cache_structure_test ${TOPDIR}/tests/cache_structure_test.cpp)
+target_link_libraries(cache_structure_test bptree gtest gtest_main ${LIBRARIES})
+add_test(cache_structure_test cache_structure_test)
 endif()
