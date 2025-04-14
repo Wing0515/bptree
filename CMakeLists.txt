@@ -65,6 +65,12 @@ target_link_libraries(simple_test_simplified bptree ${LIBRARIES})
 add_executable(run_simplified_benchmark benchmarks/run_simplified_benchmark.cpp)
 target_link_libraries(run_simplified_benchmark bptree ${LIBRARIES})
 
+add_executable(test_cache_configurations test_cache_configurations.cpp)
+target_link_libraries(test_cache_configurations bptree ${LIBRARIES})
+
+add_executable(test_cache_misses test_cache_misses.cpp)
+target_link_libraries(test_cache_misses bptree ${LIBRARIES})
+
 add_executable(simple_test simple_test.cpp)
 target_link_libraries(simple_test bptree ${LIBRARIES})
 
