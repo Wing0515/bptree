@@ -304,12 +304,12 @@ void save_results_to_csv(const std::vector<TestConfig>& configs,
 TEST(MiraPerformanceTest, CompareWithAndWithoutPrefetching) {
     // Determine number of iterations based on system performance
     // More iterations = more accurate results but longer test time
-    const size_t NUM_ITERATIONS = 25;
+    const size_t NUM_ITERATIONS = 100;
 
     // Adjust these numbers based on your system's capacity
     // Smaller numbers for faster testing, larger for more realistic results
-    const size_t NUM_KEYS = 200000;
-    const size_t NUM_QUERIES = 20000;
+    const size_t NUM_KEYS = 1000000;
+    const size_t NUM_QUERIES = 50000;
     
     // Test configurations
     std::vector<TestConfig> configs = {
@@ -317,10 +317,20 @@ TEST(MiraPerformanceTest, CompareWithAndWithoutPrefetching) {
         {
             .num_keys = NUM_KEYS,
             .num_queries = NUM_QUERIES,
-            .num_threads = 4,
+            .num_threads = 1,
             .network_latency_us = 0,
             .enable_prefetching = false,
-            .description = "Baseline (No Latency)",
+            .description = "Baseline (No Latency), single thread - No Prefetching",
+            .iterations = NUM_ITERATIONS
+        },
+
+        {
+            .num_keys = NUM_KEYS,
+            .num_queries = NUM_QUERIES,
+            .num_threads = 1,
+            .network_latency_us = 0,
+            .enable_prefetching = true,
+            .description = "Baseline (No Latency), single thread - With Prefetching",
             .iterations = NUM_ITERATIONS
         },
         
@@ -329,78 +339,78 @@ TEST(MiraPerformanceTest, CompareWithAndWithoutPrefetching) {
             .num_keys = NUM_KEYS,
             .num_queries = NUM_QUERIES,
             .num_threads = 4,
-            .network_latency_us = 100,
+            .network_latency_us = 2,
             .enable_prefetching = false,
-            .description = "Low Latency (100μs) - No Prefetching",
+            .description = "RDMA AVG Latency (2μs) - No Prefetching",
             .iterations = NUM_ITERATIONS
         },
         {
             .num_keys = NUM_KEYS,
             .num_queries = NUM_QUERIES,
             .num_threads = 4,
-            .network_latency_us = 100,
+            .network_latency_us = 2,
             .enable_prefetching = true,
-            .description = "Low Latency (100μs) - With Prefetching",
+            .description = "RDMA AVG Latency (2μs) - With Prefetching",
             .iterations = NUM_ITERATIONS
         },
         
-        // Medium latency tests
-        {
-            .num_keys = NUM_KEYS,
-            .num_queries = NUM_QUERIES,
-            .num_threads = 4,
-            .network_latency_us = 500,
-            .enable_prefetching = false,
-            .description = "Medium Latency (500μs) - No Prefetching",
-            .iterations = NUM_ITERATIONS
-        },
-        {
-            .num_keys = NUM_KEYS,
-            .num_queries = NUM_QUERIES,
-            .num_threads = 4,
-            .network_latency_us = 500,
-            .enable_prefetching = true,
-            .description = "Medium Latency (500μs) - With Prefetching",
-            .iterations = NUM_ITERATIONS
-        },
+        // // Medium latency tests
+        // {
+        //     .num_keys = NUM_KEYS,
+        //     .num_queries = NUM_QUERIES,
+        //     .num_threads = 4,
+        //     .network_latency_us = 500,
+        //     .enable_prefetching = false,
+        //     .description = "Medium Latency (500μs) - No Prefetching",
+        //     .iterations = NUM_ITERATIONS
+        // },
+        // {
+        //     .num_keys = NUM_KEYS,
+        //     .num_queries = NUM_QUERIES,
+        //     .num_threads = 4,
+        //     .network_latency_us = 500,
+        //     .enable_prefetching = true,
+        //     .description = "Medium Latency (500μs) - With Prefetching",
+        //     .iterations = NUM_ITERATIONS
+        // },
         
-        // High latency tests (simulating far memory)
-        {
-            .num_keys = NUM_KEYS,
-            .num_queries = NUM_QUERIES,
-            .num_threads = 4,
-            .network_latency_us = 1000,
-            .enable_prefetching = false,
-            .description = "High Latency (1ms) - No Prefetching",
-            .iterations = NUM_ITERATIONS
-        },
-        {
-            .num_keys = NUM_KEYS,
-            .num_queries = NUM_QUERIES,
-            .num_threads = 4,
-            .network_latency_us = 1000,
-            .enable_prefetching = true,
-            .description = "High Latency (1ms) - With Prefetching",
-            .iterations = NUM_ITERATIONS
-        },
+        // // High latency tests (simulating far memory)
+        // {
+        //     .num_keys = NUM_KEYS,
+        //     .num_queries = NUM_QUERIES,
+        //     .num_threads = 4,
+        //     .network_latency_us = 1000,
+        //     .enable_prefetching = false,
+        //     .description = "High Latency (1ms) - No Prefetching",
+        //     .iterations = NUM_ITERATIONS
+        // },
+        // {
+        //     .num_keys = NUM_KEYS,
+        //     .num_queries = NUM_QUERIES,
+        //     .num_threads = 4,
+        //     .network_latency_us = 1000,
+        //     .enable_prefetching = true,
+        //     .description = "High Latency (1ms) - With Prefetching",
+        //     .iterations = NUM_ITERATIONS
+        // },
         
         // Multi-threaded tests
         {
             .num_keys = NUM_KEYS,
             .num_queries = NUM_QUERIES,
             .num_threads = 8,
-            .network_latency_us = 500,
+            .network_latency_us = 2,
             .enable_prefetching = false,
-            .description = "8 Threads, Medium Latency - No Prefetching",
+            .description = "8 Threads, RDMA AVG Latency - No Prefetching",
             .iterations = NUM_ITERATIONS
         },
         {
             .num_keys = NUM_KEYS,
             .num_queries = NUM_QUERIES,
             .num_threads = 8,
-            .network_latency_us = 500,
+            .network_latency_us = 2,
             .enable_prefetching = true,
-            .description = "8 Threads, Medium Latency - With Prefetching",
+            .description = "8 Threads, RDMA AVG Latency - With Prefetching",
             .iterations = NUM_ITERATIONS
         }
     };
