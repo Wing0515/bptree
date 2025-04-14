@@ -30,6 +30,7 @@ include_directories(
 set(SOURCE_FILES
     ${TOPDIR}/src/heap_file.cpp
     ${TOPDIR}/src/heap_page_cache.cpp
+    ${TOPDIR}/src/configurable_cache.cpp
     ${TOPDIR}/src/tree.cpp
     ${TOPDIR}/src/tree_node.cpp)
             
@@ -37,6 +38,7 @@ set(HEADER_FILES
     ${TOPDIR}/include/bptree/heap_file.h 
     ${TOPDIR}/include/bptree/heap_page_cache.h
     ${TOPDIR}/include/bptree/mem_page_cache.h
+    ${TOPDIR}/include/bptree/configurable_cache.h
     ${TOPDIR}/include/bptree/page.h
     ${TOPDIR}/include/bptree/page_cache.h
     ${TOPDIR}/include/bptree/tree_node.h)
@@ -53,6 +55,19 @@ target_link_libraries(bptree ${LIBRARIES})
 target_include_directories(bptree PUBLIC ${INCLUDE_DIRS})
 install(TARGETS bptree DESTINATION lib)
 
+# Benchmarks
+add_executable(run_cache_benchmarks benchmarks/run_cache_benchmarks.cpp)
+target_link_libraries(run_cache_benchmarks bptree ${LIBRARIES})
+
+add_executable(simple_test_simplified simple_test_simplified.cpp)
+target_link_libraries(simple_test_simplified bptree ${LIBRARIES})
+
+add_executable(run_simplified_benchmark benchmarks/run_simplified_benchmark.cpp)
+target_link_libraries(run_simplified_benchmark bptree ${LIBRARIES})
+
+add_executable(simple_test simple_test.cpp)
+target_link_libraries(simple_test bptree ${LIBRARIES})
+
 if (BPTREE_BUILD_TESTS)
 add_subdirectory(${TOPDIR}/3rdparty/googletest)
 enable_testing()
@@ -60,6 +75,7 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 set(TEST_SOURCE_FILES
     ${TOPDIR}/tests/tree_test.cpp
+    ${TOPDIR}/tests/configurable_cache_test.cpp
     ${TOPDIR}/tests/mira_performance_test.cpp)
     
 add_executable(bptree_unit_tests ${EXT_SOURCE_FILES} ${TEST_SOURCE_FILES})
